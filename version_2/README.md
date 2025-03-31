@@ -1,52 +1,73 @@
 
-# HLA genotyping, haplotyping, and allele calling from short-read next-generation sequencing data
-Version 2.0 (Jan 25th, 2023)
-Author: Erick C. Castelli (erick.castelli@unesp.br)
+# HLA Genotyping, Haplotyping, and Allele Calling from Short-Read Next-Generation Sequencing Data
+
+**Version:** 2.0 (Jan 25th, 2023)  
+**Author:** Erick C. Castelli (<erick.castelli@unesp.br>)
+
+## Overview
+This pipeline is designed to call SNPs and indels in genes from the MHC region, derive phased haplotypes, and determine HLA alleles directly from phased VCF data. It supports a variety of short-read sequencing technologies and is optimized for Illumina WGS and WES data.
+
+## Table of Contents
+- [Overview](#overview)
+- [Important Notes](#important-notes)
+- [Dependencies](#dependencies)
+- [How to Cite This Pipeline](#how-to-cite-this-pipeline)
+- [Workflow](#workflow)
+  - [1. Using hla-mapper](#1-using-hla-mapper-to-get-unbiased-read-alignment-for-hla-genes)
+  - [2. Check BAMs with IGV](#2-Check-BAMs-with-IGV)
+  - [3. Variant Call Using GATK](#3-variant-call-using-gatk-4)
+  - [4. Variant Refinement](#4-variant-refinement)
+  - [5. Calling Phase Sets](#5-Calling-Phase-Sets)
+  - [6. Normalize WhatsHap VCF](#6-Normalize-WhatsHap-VCF)
+  - [7. Calling Haplotypes](#7-calling-haplotypes)
+  - [8. Convert to Multi-allelic VCF](#8-convert-the-biallelic-vcf-to-multi-allelic-vcf)
+  - [9. Calling Sequences and Alleles](#9-calling-complete-sequences-and-hla-alleles)
+  - [10. Checking the Alleles](#10-checking-the-alleles)
+- [Known Issues](#known-issues)
 
 
-> [!IMPORTANT]  
-> This pipeline was designed to call SNPs and indels in genes from the MHC region, get the haplotypes, and call HLA alleles directly from the phased VCF data.
-> 
-> - **Data compatibility.** This tutorial is compatible with whole-genome sequencing (WGS), whole-exome sequencing (WES), and amplicon sequencing. It was tested with short reads from Illumina (WGS and WES). It might work with Ion with some adjustments.
-> - **System compatibility.** Use macOS or Linux. We have tested with MacOS 10.15 and Ubuntu 18.04. Other versions might be compatible.
-> - **Read depth.** Please note that read depth is essential. We recommend coverage of at least 30x for WGS and 50x for WES and amplicons. 
-> - **Read size.** You will get better results when dealing with a read size larger than 75 nucleotides and paired-end sequencing, although the pipeline is also compatible with single-end sequencing data.
-> - **Sample size.** The minimum sample size we have tested is 150 samples. You can proceed with a single-sample analysis up to step 3, but not further. Please use another method (such as HLA-LA) for a single-sample allele call. 
+## Important Notes
+This pipeline was designed to call SNPs and indels in genes from the MHC region, get the haplotypes, and call HLA alleles directly from the phased VCF data.
+ 
+- **Data compatibility.** This tutorial is compatible with whole-genome sequencing (WGS), whole-exome sequencing (WES), and amplicon sequencing. It was tested with short reads from Illumina (WGS and WES). It might work with Ion with some adjustments.
+- **System compatibility.** Use macOS or Linux. We have tested with MacOS 10.15 and Ubuntu 18.04. Other versions might be compatible.
+- **Read depth.** Please note that read depth is essential. We recommend coverage of at least 30x for WGS and 50x for WES and amplicons. 
+- **Read size.** You will get better results when dealing with a read size larger than 75 nucleotides and paired-end sequencing, although the pipeline is also compatible with single-end sequencing data.
+- **Sample size.** The minimum sample size we have tested is 150 samples. You can proceed with a single-sample analysis up to [Step 3]((#3-variant-call-using-gatk-4)), but not further. Please use another method (such as HLA-LA) for a single-sample allele call. 
 
 
-## Dependences
+## Dependencies
 The following list contains all the software used in this pipeline and their indicated versions. Newer or older versions might also work, but we haven't tested them.
 
 > [!CAUTION]
-> Please use bcftools 1.13. The pipeline will not work in newer versions.
+> Use `bcftools 1.13`. Newer versions are **not supported**.
 
-- hla-mapper 4 (https://github.com/erickcastelli/hla-mapper)
-- GATK, 4.2.0 or higher (https://gatk.broadinstitute.org/hc/en-us)
-- WhatsHap, 2.2 or higher (https://whatshap.readthedocs.io/en/latest/)
-- vcfx 2 (www.castelli-lab.net/apps/vcfx)
-- shapeit4 (https://odelaneau.github.io/shapeit4/)
-- samtools, 1.19 or higher (http://samtools.sourceforge.net)
-- BWA, 0.7.17 (https://sourceforge.net/projects/bio-bwa/files/)
-- bcftools 1.19 or higher (http://samtools.github.io/bcftools/)
-- IGV, any version (https://software.broadinstitute.org/software/igv/)
-- vcftools, any version (https://vcftools.sourceforge.net/) 
-- Emboss, 6.6 (https://emboss.sourceforge.net/download/) 
-- BGZIP and TABIX
+- [`hla-mapper 4`](https://github.com/erickcastelli/hla-mapper)
+- [`GATK`](https://gatk.broadinstitute.org/), v4.2.0+
+- [`WhatsHap`](https://whatshap.readthedocs.io/), v2.2+
+- [`vcfx`](https://www.castelli-lab.net/apps/vcfx), v2
+- [`shapeit4`](https://odelaneau.github.io/shapeit4/)
+- [`samtools`](http://samtools.sourceforge.net), v1.19+
+- [`BWA`](https://sourceforge.net/projects/bio-bwa/files/), v0.7.17
+- [`bcftools`](http://samtools.github.io/bcftools/), **v1.13 only**
+- [`IGV`](https://software.broadinstitute.org/software/igv/)
+- [`vcftools`](https://vcftools.sourceforge.net/)
+- [`Emboss`](https://emboss.sourceforge.net/download/), v6.6
+- `bgzip` and `tabix`
 
 
 ## How to cite this pipeline
 
 You should cite `hla-mapper`:
 
-> Hla-mapper: an application to optimize the mapping of hla sequences produced by massively parallel sequencing procedures. Human Immunology 2018. doi: https://doi.org/110.1016/j.humimm.2018.06.010
+> Castelli, E. C., et al. (2018). Hla-mapper: An application to optimize the mapping of HLA sequences produced by massively parallel sequencing procedures. *Human Immunology*. https://doi.org/110.1016/j.humimm.2018.06.010
 
 And this pipeline was used in these two studies:
+> Costa, A. I., et al. (2021). MHC Variants Associated With Symptomatic Versus Asymptomatic SARS-CoV-2 Infection. *Front. Immunol.* https://doi.org/10.3389/fimmu.2021.742881
 
-> MHC Variants Associated With Symptomatic Versus Asymptomatic SARS-CoV-2 Infection in Highly Exposed Individuals. Front. Immunol., 28 September 2021, https://doi.org/10.3389/fimmu.2021.742881
+> Oliveira-Santos, M., et al. (2022). MUC22, HLA-A, and HLA-DOB Variants and COVID-19 in Resilient Super-Agers from Brazil. *Front. Immunol.* https://doi.org/10.3389/fimmu.2022.975918
 
-> MUC22, HLA-A, and HLA-DOB variants and COVID-19 in resilient super-agers from Brazil. Front. Immunol., 25 October 2022, https://doi.org/10.3389/fimmu.2022.975918
-
-You should cite all the applications described in previous section (samtools, bcftools, shapeit4, etc)
+Also cite any tools listed in [Dependencies](#dependencies).
 
 # Workflow
 
@@ -101,7 +122,7 @@ Please note that hla-mapper can handle uncompressed and compressed FASTQ files.
 > [!NOTE]
 > hla-mapper supports single-end sequencing data. Instead of `r1=` and `r2=`, use `r0=` to indicate your single-end fastq.
 
-## 2. Check some of the BAM files using IGV
+## 2. Check BAMs with IGV
 Using IGV, please check some of the hla-mapper BAM files produced by hla-mapper (`Sample_Name.adjusted.bam` or `Sample_Name.adjusted.nodup.bam`). 
 
 Make sure everything is OK. For step 1A, you can compare the original BAM (before hla-mapper optimization) with the new ones.
@@ -221,7 +242,7 @@ The last VCF file contains only the variants that have passed the VQSR/vcfx work
 > [!NOTE]
 > The VCF generated up to this step is suitable for association studies and other purposes. Still, it consists of unphased genotypes with some missing alleles.
 
-## 5. Calling phasing sets directly from the sequencing data
+## 5. Calling Phase Sets
 In this step, we will infer phase sets (the micro haplotypes) directly from the sequencing data using WhatsHap. We will use these phase sets in the upcoming haplotyping procedure with shapeit4.
 
 We have two options here. 
@@ -252,7 +273,7 @@ You will find a `whatshap.vcf` file in the output folder.
 > You should copy all the `.adjusted.bam` and `.adjusted.bam.bai` files from each hla-mapper output to the same location, and indicate this location using the `-b` option.
 
 
-## 6. Normalize your WhatsHap VCF to a biallelic VCF
+## 6. Normalize WhatsHap VCF
 ```bash
 bcftools norm -m-any whatshap.vcf > whatshap.biallelic.vcf
 ```
