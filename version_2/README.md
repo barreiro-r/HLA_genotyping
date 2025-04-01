@@ -181,7 +181,7 @@ There are many ways to proceed with variant refinement, i.e., removing artifacts
 
 Recode the VCF file using vcftools. This is important for the following steps to correct some minor encoding errors sometimes introduced by GATK.
 ```bash
-vcftools --vcf VCF_FILE -keep-INFO-all --recode --out VCF_FILE_RECODE
+vcftools --vcf VCF_FILE --keep-INFO-all --recode --out VCF_FILE_RECODE
 ```
 
 Use sed to change any "|" allele separator for "/" in VCF file.
@@ -199,8 +199,9 @@ Use GATK VQSR to filter out artifacts. Please follow the GATK 4 instructions.
 An example of this step is as follows. **The MHC.select.vcf.gz file is provided in the supplementary files.**
 
 ```bash
-java -Xmx32g -jar gatk-package-4.2.0.0-local.jar VariantRecalibrator
-    -R hg38.fasta -V VCF_FILE_RECODE_TREATED_GZ \
+java -Xmx32g -jar gatk-package-4.2.0.0-local.jar VariantRecalibrator \
+    -R hg38.fasta \
+    -V VCF_FILE_RECODE_TREATED_GZ \
     -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR \
     -mode BOTH \
     -O vcf.recal \
