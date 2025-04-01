@@ -153,7 +153,15 @@ java -Xmx32g -jar gatk-package-4.2.0.0-local.jar HaplotypeCaller \
 
 Repeat this step for every sample.
 
-After processing all your samples, you need to combine all G.VCF files into one. There are two ways to do that, depending on the number of samples. The most common one is using GATK [CombineGVCFs](https://gatk.broadinstitute.org/hc/en-us/articles/360037053272-CombineGVCFs). The other is [GenomicsDBImport](https://gatk.broadinstitute.org/hc/en-us/articles/360036883491-GenomicsDBImport). This tutorial does not cover this issue. Please follow the GATK instructions and combine all GVCFS into one.
+After processing all your samples, you need to combine all G.VCF files into one. There are two ways to do that, depending on the number of samples. The most common one is using GATK [CombineGVCFs](https://gatk.broadinstitute.org/hc/en-us/articles/360037053272-CombineGVCFs). The other is [GenomicsDBImport](https://gatk.broadinstitute.org/hc/en-us/articles/360036883491-GenomicsDBImport). Here is an example of how to combine using GATK's Combine GVCFs
+
+```bash
+find output_folder/ -name *.g.vcf > output_folder/gvcf.list
+java -Xmx32g -jar gatk-package-4.2.0.0-local.jar CombineGVCFs \
+    -R reference_genome \
+    -O output_folder/All_samples.MHC.g.vcf \
+    --variant output_folder/gvcfs.list
+```
 
 Now, you can genotype your GVCF using GATK GenotypeGVCFs. If you used CombineGVFs, one example is this:
 ```bash
