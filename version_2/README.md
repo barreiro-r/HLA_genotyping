@@ -234,12 +234,14 @@ Use the provided script `filter_after_VQSR.pl` and file `MHC_All.vcf` to filter 
     perl filter_after_VQSR.pl \
         -v all_samples.VQSR.MHC.vcf \
         -r MHC_All.vcf
+
+    # The output will be a .filtered.vcf in the same dir as the input
 ```
 
-We will call the new VCF file after the VQSR procedure as VCF.VQSR.vcf
+We will call the new VCF file after the VQSR procedure as `VCF.VQSR.vcf`
 
 
-Use vcfx to introduce missing alleles in unbalanced heterozygous sites and in homozygous sites in regions with very low read depth. Please check the vcfx manual to understand what is going on here (www.castelli-lab.net/apps/vcfx).
+Use [vcfx](http://www.castelli-lab.net/vcfx.html) to introduce missing alleles in unbalanced heterozygous sites and in homozygous sites in regions with very low read depth. Please check the vcfx manual to understand what is going on here (http://www.castelli-lab.net/vcfx.html).
 
 ```bash
 vcfx checkad input=VCF.VQSR.vcf # (this will create a .ad.vcf file next to the original VCF)
@@ -258,28 +260,36 @@ The last VCF file contains only the variants that have passed the VQSR/vcfx work
 > The VCF generated up to this step is suitable for association studies and other purposes. Still, it consists of unphased genotypes with some missing alleles.
 
 ## 5. Calling Phase Sets
-In this step, we will infer phase sets (the micro haplotypes) directly from the sequencing data using WhatsHap. We will use these phase sets in the upcoming haplotyping procedure with shapeit4.
+In this step, we will infer phase sets (the micro haplotypes) directly from the sequencing data using [WhatsHap](https://whatshap.readthedocs.io/en/latest/). We will use these phase sets in the upcoming haplotyping procedure with shapeit4.
 
 We have two options here. 
 
+### 5A WhatsHap deafult
 The first option is to run WhatsHap as recommended, using a single core, such as this:
 ```bash
 whatshap phase \
     --indels \
     -o whatshap.vcf \
     --reference chr6.fasta \
-    --tag PS VCF.VQSR.ad.trim.minac.rec.vcf bam1 bam2 bam3 ...
+    --tag PS VCF.VQSR.ad.trim.minac.rec.vcf \
+    bam1 bam2 bam3 ...
 ```
 
 However, we recommend the next option because it uses better your computation resources and maximizes the WhatsHap phasing capacity by transforming some multi-allelic variants into bi-allelic ones.
 
+### 5B Parallelize WhatsHap
+
 The second (and recommended) option is to run WhatsHap in parallel using the provided script (`parallelize_whatshap.pl`). This script will split your VCF files into single-sample VCF files, call WhatsHap for each sample in parallel, and join all files in a single VCF.
 
-The input for this step is the VCF file produced in Step 4 (`VCF.VQSR.ad.trim.minac.rec.vcf`). The output is a VCF file with phase sets (`whatshap.vcf`)
+The input for this step is the VCF file produced in Step 4 (`VCF.VQSR.ad.trim.minac.recoded.vcf`). The output is a VCF file with phase sets (`whatshap.vcf`)
 An example of the script to parallelize whatshap:
 
 ```bash
-perl parallelize_whatshap.pl -v VCF.VQSR.ad.trim.minac.rec.vcf -b /Users/lab/bams/ -o /Users/lab/whatshap_out/ -r chr6.fasta
+perl parallelize_whatshap.pl \
+    -v VCF.VQSR.ad.trim.minac.rec.vcf \
+    -b /Users/lab/bams/ \
+    -o /Users/lab/whatshap_out/ \
+    -r chr6.fasta
 ```
 
 You will find a `whatshap.vcf` file in the output folder.
@@ -289,14 +299,15 @@ You will find a `whatshap.vcf` file in the output folder.
 
 
 ## 6. Normalize WhatsHap VCF
+
+> [!CAUTION]
+> Please use bcftools 1.13. The pipeline will not work in newer versions.
+
 ```bash
 bcftools norm -m-any whatshap.vcf > whatshap.biallelic.vcf
 ```
 
 Use `bgzip` and `tabix` to compress and index the `whatshap.biallelic.vcf` file
-
-> [!CAUTION]
-> Please use bcftools 1.13. The pipeline will not work in newer versions.
 
 
 ## 7. Calling haplotypes
