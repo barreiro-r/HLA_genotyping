@@ -315,8 +315,13 @@ tabix -p vcf whatshap.biallelic.vcf.gz
 We will use shapeit4 to call haplotypes. Please check https://odelaneau.github.io/shapeit4/ for instructions on how to do it.
 
 An example of this run is as follows:
+
+> [!WARNING]
+> You may adjust the number of threads, the interactions scheme. Include the map file `--map` is optional. However, never forget to include `--sequencing` and `--use-PS`
+
 ```bash
-shapeit4 --input whatshap.biallelic.vcf.gz \
+shapeit4 \
+    --input whatshap.biallelic.vcf.gz \
     --map chr6.b38.gmap.gz \
     --region chr6 \
     --output whatshap.biallelic.shapeit.vcf \
@@ -325,11 +330,8 @@ shapeit4 --input whatshap.biallelic.vcf.gz \
     --sequencing \
     --use-PS 0.0001 
 
-The final VCF file is a phased biallelic VCF.
+# The final VCF file is a phased biallelic VCF.
 ```
-
-> [!WARNING]
-> You may adjust the number of threads, the interactions scheme. Include the map file `--map` is optional. However, never forget to include `--sequencing` and `--use-PS`
 
 ## 8. Convert the biallelic VCF to multi-allelic VCF
 
