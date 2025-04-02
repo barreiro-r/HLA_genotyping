@@ -303,12 +303,13 @@ You will find a `whatshap.vcf` file in the output folder.
 > [!CAUTION]
 > Please use bcftools 1.13. The pipeline will not work in newer versions.
 
+Use `bcftools` norm to normalize and split multiallelic variants in the VCF file. Then use `bgzip` and `tabix` to compress and index the `whatshap.biallelic.vcf`.
+
 ```bash
 bcftools norm -m-any whatshap.vcf > whatshap.biallelic.vcf
+bgzip whatshap.biallelic.vcf
+tabix -p vcf whatshap.biallelic.vcf.gz
 ```
-
-Use `bgzip` and `tabix` to compress and index the `whatshap.biallelic.vcf` file
-
 
 ## 7. Calling haplotypes
 We will use shapeit4 to call haplotypes. Please check https://odelaneau.github.io/shapeit4/ for instructions on how to do it.
