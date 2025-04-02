@@ -7,6 +7,8 @@
 ## Overview
 This pipeline is designed to call SNPs and indels in genes from the MHC region, derive phased haplotypes, and determine HLA alleles directly from phased VCF data. It supports a variety of short-read sequencing technologies and is optimized for Illumina WGS and WES data.
 
+![Pipeline Diagram](./hla-genotyping-workflow.png)
+
 ## Table of Contents
 - [Overview](#overview)
 - [Important Notes](#important-notes)
@@ -251,7 +253,7 @@ Use bcftools to remove alleles that no longer exist, and vcftools to recode the 
 ```bash
 bcftools view --trim-alt-alleles VCF.VQSR.ad.vcf > VCF.VQSR.ad.trim.vcf
 bcftools view --min-ac 1 VCF.VQSR.ad.trim.vcf > VCF.VQSR.ad.trim.minac.vcf
-vcftools --vcf VCF.VQSR.ad.trim.minac.vcf --recode --out VCF.VQSR.ad.trim.minac.rec.vcf
+vcftools --vcf VCF.VQSR.ad.trim.minac.vcf --recode --keep-INFO-all --out VCF.VQSR.ad.trim.minac.rec.vcf
 ```
 
 The last VCF file contains only the variants that have passed the VQSR/vcfx workflow. For now on, we will refer to this VCF file as "VCF".
