@@ -228,7 +228,13 @@ java -Xmx32g -jar gatk-package-4.2.0.0-local.jar ApplyVQSR \
 > You need to adjust the amount of memory (in this case, 32Gb), the path for the reference genome (you may use the provided chr6.fasta).
 
 
-Use the provided script `filter_after_VQSR.pl` and file `MHC_All.vcf` to filter out the artifacts.
+Use the provided script `filter_after_VQSR.pl` and file `MHC_All.vcf` to filter out the artifacts (both script and reference file are in the [support](./support/) directory).
+
+```bash
+    perl filter_after_VQSR.pl \
+        -v all_samples.VQSR.MHC.vcf \
+        -r MHC_All.vcf
+```
 
 We will call the new VCF file after the VQSR procedure as VCF.VQSR.vcf
 
